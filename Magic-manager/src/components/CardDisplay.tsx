@@ -66,7 +66,7 @@ export function CardDisplay({
     <CardComponent className={`overflow-hidden ${className}`}>
       <div className="relative">
         <img
-          src={ScryfallService.getCardImage(card, 'normal')}
+          src={card.imageUrl || card.image_uris?.normal || '/placeholder-card.jpg'}
           alt={card.name}
           className="w-full h-auto object-cover"
           onError={(e) => {

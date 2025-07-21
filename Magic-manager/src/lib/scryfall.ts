@@ -6,166 +6,96 @@ export class ScryfallService {
   /**
    * Recherche une carte par son nom
    */
-  static async searchCard(query: string): Promise<Card[]> {
+  static async searchCard(query: string, isCommanderSearch: boolean = false): Promise<Card[]> {
     try {
+      const cleanQuery = query.trim();
+      if (cleanQuery.length < 2) {
+        return [];
+      }
+
       const response = await fetch(
-        `${SCRYFALL_API_BASE}/cards/search?q=${encodeURIComponent(query)}`
+        `${SCRYFALL_API_BASE}/cards/search?q=${encodeURIComponent(cleanQuery)}`
       );
       
       if (!response.ok) {
+        if (response.status === 404) {
+          return [];
+        }
         throw new Error(`Erreur HTTP: ${response.status}`);
       }
       
       const data = await response.json();
       
       if (data.object === 'error') {
+        if (data.code === 'not_found' || data.details?.includes('no cards found')) {
+          return [];
+        }
         throw new Error(data.details || 'Erreur lors de la recherche');
       }
       
-      return data.data.map((card: ScryfallCard) => this.transformCard(card));
+      let cards = data.data.map((card: ScryfallCard) => this.transformCard(card));
+      
+      // Filtrer pour Commander si demandé
+      if (isCommanderSearch) {
+        cards = cards.filter(card => card.legalities?.commander === 'legal');
+      }
+      
+      return cards.slice(0, 20);
     } catch (error) {
       console.error('Erreur lors de la recherche de carte:', error);
-      throw error;
+      return [];
     }
   }
 
   /**
-   * Récupère une carte par son nom exact
+   * Transformer une carte Scryfall en format local
    */
-  static async getCardByName(name: string): Promise<Card> {
-    try {
-      const response = await fetch(
-        `${SCRYFALL_API_BASE}/cards/named?exact=${encodeURIComponent(name)}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
-      }
-      
-      const card = await response.json();
-      return this.transformCard(card);
-    } catch (error) {
-      console.error('Erreur lors de la récupération de la carte:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Récupère une carte par son ID
-   */
-  static async getCardById(id: string): Promise<Card> {
-    try {
-      const response = await fetch(`${SCRYFALL_API_BASE}/cards/${id}`);
-      
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
-      }
-      
-      const card = await response.json();
-      return this.transformCard(card);
-    } catch (error) {
-      console.error('Erreur lors de la récupération de la carte:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Récupère les cartes d'un set spécifique
-   */
-  static async getCardsBySet(setCode: string): Promise<Card[]> {
-    try {
-      const response = await fetch(
-        `${SCRYFALL_API_BASE}/cards/search?q=set:${setCode}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.object === 'error') {
-        throw new Error(data.details || 'Erreur lors de la récupération du set');
-      }
-      
-      return data.data.map((card: ScryfallCard) => this.transformCard(card));
-    } catch (error) {
-      console.error('Erreur lors de la récupération du set:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Récupère les formats légaux pour une carte
-   */
-  static async getCardLegalities(cardName: string): Promise<Record<string, string>> {
-    try {
-      const card = await this.getCardByName(cardName);
-      return card.legalities || {};
-    } catch (error) {
-      console.error('Erreur lors de la récupération des légalités:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Transforme les données de l'API Scryfall en format Card
-   */
-  private static transformCard(scryfallCard: ScryfallCard): Card {
+  static transformCard(scryfallCard: ScryfallCard): Card {
     return {
       id: scryfallCard.id,
       name: scryfallCard.name,
-      name_fr: scryfallCard.printed_name || scryfallCard.name,
-      mana_cost: scryfallCard.mana_cost,
-      cmc: scryfallCard.cmc,
       type_line: scryfallCard.type_line,
+      mana_cost: scryfallCard.mana_cost,
       oracle_text: scryfallCard.oracle_text,
       power: scryfallCard.power,
       toughness: scryfallCard.toughness,
-      colors: scryfallCard.colors,
-      color_identity: scryfallCard.color_identity,
       rarity: scryfallCard.rarity,
-      set: scryfallCard.set,
       set_name: scryfallCard.set_name,
+      set: scryfallCard.set,
       collector_number: scryfallCard.collector_number,
       image_uris: scryfallCard.image_uris,
-      prices: scryfallCard.prices,
       legalities: scryfallCard.legalities,
+      color_identity: scryfallCard.color_identity,
+      imageUrl: scryfallCard.image_uris?.normal || undefined,
     };
   }
 
   /**
-   * Récupère l'image d'une carte
+   * Valider l'identité couleur Commander stricte
    */
-  static getCardImage(card: Card, size: 'small' | 'normal' | 'large' | 'png' | 'art_crop' | 'border_crop' = 'normal'): string {
-    if (!card.image_uris) {
-      return 'https://via.placeholder.com/223x310/2a2a2a/ffffff?text=Magic+Card'; // Image par défaut
+  static validateCardCommanderIdentity(card: Card, commanderColors: string[]): boolean {
+    if (!commanderColors || commanderColors.length === 0) {
+      return this.extractManaSymbols(card).length === 0;
     }
-    
-    return card.image_uris[size] || card.image_uris.normal;
+    return this.extractManaSymbols(card).every(symbol => commanderColors.includes(symbol));
   }
 
   /**
-   * Récupère le prix d'une carte
+   * Extraire tous les symboles de mana d'une carte (coût + texte)
    */
-  static getCardPrice(card: Card, currency: 'usd' | 'eur' = 'eur', foil: boolean = false): string | null {
-    if (!card.prices) {
-      return null;
+  private static extractManaSymbols(card: Card): string[] {
+    const symbols = new Set<string>();
+    const manaCost = card.mana_cost || '';
+    const oracleText = card.oracle_text || '';
+    const regex = /{([WUBRG])}/g;
+    let match;
+    while ((match = regex.exec(manaCost)) !== null) {
+      symbols.add(match[1]);
     }
-    
-    const priceKey = foil ? `${currency}_foil` : currency;
-    return card.prices[priceKey as keyof typeof card.prices] || null;
-  }
-
-  /**
-   * Vérifie si une carte est légale dans un format
-   */
-  static isCardLegal(card: Card, format: string): boolean {
-    if (!card.legalities) {
-      return false;
+    regex.lastIndex = 0;
+    while ((match = regex.exec(oracleText)) !== null) {
+      symbols.add(match[1]);
     }
-    
-    const legality = card.legalities[format as keyof typeof card.legalities];
-    return legality === 'legal' || legality === 'restricted';
+    return Array.from(symbols);
   }
 } 

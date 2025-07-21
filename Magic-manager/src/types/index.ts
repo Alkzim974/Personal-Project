@@ -23,6 +23,7 @@ export interface Card {
     art_crop: string;
     border_crop: string;
   };
+  imageUrl?: string; // URL directe de l'image (pour la base de données)
   prices?: {
     usd?: string;
     usd_foil?: string;

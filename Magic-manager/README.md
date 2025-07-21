@@ -1,80 +1,94 @@
 # Magic Manager
 
-Une application web inspirée de Moxfield pour la gestion de cartes Magic: The Gathering.
+Application de gestion de decks Magic: The Gathering avec authentification et recherche de cartes.
 
-## Fonctionnalités
+## 🚀 Installation
 
-- **Authentification** : Connexion avec Google, GitHub ou email/mot de passe
-- **Gestion de collection** : Ajout et gestion de cartes Magic
-- **Création de decks** : Création et analyse de decks
-- **Interface moderne** : Design inspiré de Shadcn/ui
-- **API Scryfall** : Intégration avec l'API officielle Magic: The Gathering
+1. **Cloner le repository**
+```bash
+git clone <votre-repo>
+cd Magic-manager
+```
 
-## Technologies utilisées
+2. **Installer les dépendances**
+```bash
+npm install
+```
 
-- **Frontend** : Next.js 14, React, TypeScript
-- **Styling** : Tailwind CSS, Shadcn/ui
-- **Base de données** : SQLite avec Prisma ORM
-- **Authentification** : NextAuth.js
-- **API** : Scryfall API
+3. **Configuration de la base de données**
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-## Installation
+4. **Variables d'environnement**
+Créez un fichier `.env` basé sur `.env.example` :
+```env
+DATABASE_URL="file:./dev.db"
+NEXTAUTH_SECRET="votre-secret-ici"
+NEXTAUTH_URL="http://localhost:3000"
+```
 
-1. Cloner le repository
-2. Installer les dépendances : `npm install`
-3. Configurer les variables d'environnement (voir `.env.example`)
-4. Générer le client Prisma : `npx prisma generate`
-5. Pousser le schéma de base de données : `npx prisma db push`
-6. Lancer le serveur de développement : `npm run dev`
+5. **Données de cartes Magic (Optionnel)**
+Pour une recherche ultra-rapide, téléchargez le fichier de cartes :
 
-## Structure du projet
+- Allez sur [Scryfall Bulk Data](https://scryfall.com/docs/api/bulk-data)
+- Téléchargez `default-cards-english-mtg.json`
+- Placez-le dans le dossier `data/`
+- Le fichier fait ~507MB
+
+**Note :** Sans ce fichier, l'application utilise l'API Scryfall en direct.
+
+6. **Lancer l'application**
+```bash
+npm run dev
+```
+
+## 📁 Structure des fichiers
 
 ```
 Magic-manager/
+├── data/                          # Données de cartes (optionnel)
+│   └── default-cards-english-mtg.json
 ├── src/
-│   ├── app/                 # Pages et API routes Next.js
-│   ├── components/          # Composants React
-│   ├── lib/                 # Services et utilitaires
-│   └── types/               # Types TypeScript
-├── prisma/                  # Schéma de base de données
-├── public/                  # Fichiers statiques
-└── package.json
+│   ├── app/                       # Pages Next.js
+│   ├── components/                # Composants React
+│   ├── lib/                       # Services et utilitaires
+│   └── types/                     # Types TypeScript
+├── prisma/                        # Schéma de base de données
+└── public/                        # Assets statiques
 ```
 
-## Variables d'environnement
+## 🎯 Fonctionnalités
 
-Copier `.env.example` vers `.env.local` et configurer :
+- ✅ **Authentification** avec NextAuth.js
+- ✅ **Gestion de decks** (création, édition, suppression)
+- ✅ **Recherche de cartes** via API Scryfall
+- ✅ **Filtrage Commander** automatique
+- ✅ **Suggestions de cartes populaires**
+- ✅ **Interface drag & drop** pour réorganiser les cartes
+- ✅ **Validation des règles** Commander
 
-```env
-# NextAuth.js
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-key
+## 🔧 Technologies
 
-# OAuth Providers
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-GITHUB_ID=your-github-id
-GITHUB_SECRET=your-github-secret
+- **Frontend** : Next.js 14, React, TypeScript
+- **Styling** : Tailwind CSS, shadcn/ui
+- **Base de données** : SQLite avec Prisma
+- **Authentification** : NextAuth.js
+- **API Cartes** : Scryfall API
+- **Drag & Drop** : @dnd-kit
 
-# Base de données
-DATABASE_URL="file:./dev.db"
+## 📝 Notes importantes
 
-# Application
-NEXT_PUBLIC_APP_NAME="Magic Manager"
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+- Le fichier `default-cards-english-mtg.json` n'est **PAS** inclus dans le repo
+- Il fait ~507MB et est mis à jour régulièrement par Scryfall
+- L'application fonctionne parfaitement sans ce fichier
+- Ajouté au `.gitignore` pour éviter les problèmes de taille
 
-## Développement
+## 🚀 Déploiement
 
-- `npm run dev` : Serveur de développement
-- `npm run build` : Build de production
-- `npm run start` : Serveur de production
-- `npm run lint` : Vérification du code
+L'application est prête pour le déploiement sur Vercel, Netlify, ou tout autre plateforme supportant Next.js.
 
-## Contribution
+## 📄 Licence
 
-1. Fork le projet
-2. Créer une branche feature
-3. Commiter les changements
-4. Pousser vers la branche
-5. Créer une Pull Request
+MIT

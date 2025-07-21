@@ -34,7 +34,7 @@ export function Navigation() {
   const navigationItems = [
     { name: 'Accueil', href: '/', icon: Home },
     { name: 'Rechercher', href: '/search', icon: Search },
-    { name: 'Créer un deck', href: '/decks/create', icon: Plus },
+    { name: 'Mes Decks', href: '/decks', icon: Plus },
     { name: 'Collection', href: '/collection', icon: BookOpen },
     { name: 'Communauté', href: '/community', icon: Users },
   ];
