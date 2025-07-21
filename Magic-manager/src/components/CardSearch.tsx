@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card as CardComponent } from '@/components/ui/card';
 import { Search, Loader2, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { CardImage } from '@/components/ui/card-image';
 
 interface CardSearchProps {
   onCardSelect: (card: Card) => void;
@@ -186,13 +187,10 @@ export function CardSearch({
                 onClick={() => handleCardSelect(card)}
               >
                 <div className="flex items-center space-x-3">
-                  <img
-                    src={card.imageUrl || card.image_uris?.small || '/placeholder-card.svg'}
+                  <CardImage
+                    src={card.imageUrl || card.image_uris?.small}
                     alt={card.name}
-                    className="w-12 h-16 object-cover rounded"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder-card.svg';
-                    }}
+                    size="medium"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
@@ -242,13 +240,10 @@ export function CardSearch({
                   onClick={() => handleCardSelect(card)}
                 >
                   <div className="flex items-center space-x-3">
-                    <img
-                      src={card.imageUrl || card.image_uris?.small || '/placeholder-card.svg'}
+                    <CardImage
+                      src={card.imageUrl || card.image_uris?.small}
                       alt={card.name}
-                      className="w-12 h-16 object-cover rounded"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder-card.svg';
-                      }}
+                      size="medium"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
